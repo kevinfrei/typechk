@@ -3,8 +3,8 @@ import { FreikTypeTag, SimpleObject, boolcheck, typecheck } from './Types.js';
 /**
  * Type check for undefined
  *
- * @param obj - The value being checked
- * @returns true if the `obj` is undefined
+ * @param {unknown} obj - The value being checked
+ * @returns {boolean} true iff `obj` is undefined
  */
 export function isUndefined(obj: unknown): obj is undefined {
   return obj === undefined;
@@ -13,7 +13,7 @@ export function isUndefined(obj: unknown): obj is undefined {
 /**
  * Type check for a defined value
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns true if the `obj` is NOT undefined
  */
 export function isDefined(obj: unknown): obj is NonNullable<unknown> | null {
@@ -23,7 +23,7 @@ export function isDefined(obj: unknown): obj is NonNullable<unknown> | null {
 /**
  * Type check for null
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns true if the object is null
  */
 export function isNull(obj: unknown): obj is null {
@@ -33,7 +33,7 @@ export function isNull(obj: unknown): obj is null {
 /**
  * Type check for null or undefined
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns true if the object is null or undefined
  */
 export function isEmpty(obj: unknown): obj is null | undefined {
@@ -43,7 +43,7 @@ export function isEmpty(obj: unknown): obj is null | undefined {
 /**
  * Type check for NOT empty (nonnullable)
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns true if the object is a NonNullable
  */
 export function isNonNullable(obj: unknown): obj is NonNullable<unknown> {
@@ -53,7 +53,7 @@ export function isNonNullable(obj: unknown): obj is NonNullable<unknown> {
 /**
  * Type check for one of two types
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @param chk1 - Type Checker #1
  * @param chk2 - Type Checker #2
  * @returns true if the object is either type T or type U
@@ -83,7 +83,7 @@ export function chkOneOf<T, U>(
 /**
  * Type check for a non-null object
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns true if the value is an object, and is not null
  */
 export function isObjectNonNull(obj: unknown): obj is NonNullable<object> {
@@ -93,7 +93,7 @@ export function isObjectNonNull(obj: unknown): obj is NonNullable<object> {
 /**
  * Type check for object (or null)
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns True if obj is null, or an object (of any type)
  */
 export function isObject(obj: unknown): obj is object | null {
@@ -103,7 +103,7 @@ export function isObject(obj: unknown): obj is object | null {
 /**
  * Type check for an array (of any type)
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns True if obj is an array (of any type)
  */
 export function isArray(obj: unknown): obj is unknown[] {
@@ -113,7 +113,7 @@ export function isArray(obj: unknown): obj is unknown[] {
 /**
  * Type check for 2 element tuples
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns True of obj is a 2 element tuple (of any type!)
  */
 export function is2Tuple(obj: unknown): obj is [unknown, unknown] {
@@ -123,7 +123,7 @@ export function is2Tuple(obj: unknown): obj is [unknown, unknown] {
 /**
  * Type check for 3 element tuples
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns True of obj is a 3 element tuple (of any type!)
  */
 export function is3Tuple(obj: unknown): obj is [unknown, unknown, unknown] {
@@ -145,7 +145,7 @@ export function as<T>(chk: typecheck<T>, defVal: T): (o: unknown) => T {
 /**
  * Type check for a string
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns True if `obj` is a string
  */
 export function isString(obj: unknown): obj is string {
@@ -155,7 +155,7 @@ export function isString(obj: unknown): obj is string {
 /**
  * Type filtering for strings. Will NOT coerce the thing to a string..
  *
- * @param obj - The value being coerced
+ * @param {unknown} obj - The value being coerced
  * @param notStr = the value to return if obj is not a string
  * @returns Either obj or notStr (whichever is a string)
  */
@@ -166,7 +166,7 @@ export function asString(obj: unknown, notStr = ''): string {
 /**
  * Type coercion to a string. Will try to *lightly* coerce the thing to a string if possible.
  *
- * @param obj - The value being coerced
+ * @param {unknown} obj - The value being coerced
  * @param notStr = the value to return if obj is not a string
  * @returns Either obj, obj.toString() or notStr (in that preferred order)
  */
@@ -197,7 +197,7 @@ export function toString(obj: unknown, notStr = ''): string {
 /**
  * Type check for number (and not NaN)
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns True if obj is a number and NOT a NaN
  */
 export function isNumber(obj: unknown): obj is number {
@@ -207,7 +207,7 @@ export function isNumber(obj: unknown): obj is number {
 /**
  * If obj is a number (and not a NaN!) return that value, otherwise, return notNum
  *
- * @param obj - The value being coerced
+ * @param {unknown} obj - The value being coerced
  * @param notNum - The value to return if obj is not a number (or a NaN)
  * @returns obj, if it's a number, otherwise returns nonNum
  */
@@ -218,7 +218,7 @@ export function asNumber(obj: unknown, notNum: number): number {
 /**
  * Type check for number (and not NaN) or a string
  *
- * @param obj - The value being checked
+ * @param {unknown} obj - The value being checked
  * @returns True if obj is a number and NOT a NaN, or a string
  */
 export const isNumberOrString: typecheck<number | string> = chkOneOf(
@@ -242,65 +242,72 @@ export function asNumberOrString(
 /**
  * Type check for boolean
  * @param  {unknown} obj
- * @returns {obj_is<boolean>}
+ * @returns {boolean} true iff obj is a boolean expression
  */
 export function isBoolean(obj: unknown): obj is boolean {
   return typeof obj === 'boolean';
 }
+
 /**
  * Type check for Date
  * @param  {unknown} obj
- * @returns {obj_is<Date>}
+ * @returns {boolean} true iff obj is a Dat
  */
 export function isDate(obj: unknown): obj is Date {
   return obj instanceof Date;
 }
+
 /**
  * Type check for BigInt
  * @param  {unknown} obj
- * @returns {obj_is<BigInt>}
+ * @returns {boolean} true iff obj is a BigInt
  */
 export function isBigInt(obj: unknown): obj is bigint {
   return typeof obj === 'bigint';
 }
+
 /**
  * Type check for Function
  * @param  {unknown} obj
- * @returns {obj_is<Function>}
+ * @returns {boolean} true iff obj is a function
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export function isFunction(obj: unknown): obj is Function {
   return typeof obj === 'function';
 }
+
 /**
  * Type check for RegExp
  * @param  {unknown} obj
- * @returns {obj_is<RegExp>}
+ * @returns {boolean} true iff obj is a Regular Expression
  */
 export function isRegex(obj: unknown): obj is RegExp {
   return obj instanceof RegExp;
 }
+
 /**
  * Type check for Map
  * @param  {unknown} obj
- * @returns {obj_is<Map<unknown,unknown>>}
+ * @returns {boolean} true iff obj is a Map (of any key and value type)
  */
 export function isMap(obj: unknown): obj is Map<unknown, unknown> {
   return obj instanceof Map;
 }
+
 /**
  * Type check for Set
  * @param  {unknown} obj
- * @returns {obj_is<Set<unknown>>}
+ * @returns {boolean} true iff obj is a Set (of any key type)
  */
 export function isSet(obj: unknown): obj is Set<unknown> {
   return obj instanceof Set;
 }
+
 /**
  * Type check for T[] (Array<T>)
  * @param  {unknown} obj
  * @param  {typecheck<T>} chk - TypeCheck function for Type T
- * @returns {obj_is<T[]>}
+ * @returns {boolean} true iff obj is an Array of type T (or an empty array!)
  */
 export function isArrayOf<T>(obj: unknown, chk: typecheck<T>): obj is T[] {
   if (!isArray(obj)) return false;
@@ -309,20 +316,22 @@ export function isArrayOf<T>(obj: unknown, chk: typecheck<T>): obj is T[] {
   }
   return true;
 }
+
 /**
  * Generate a type check function for T[] (Array<T>)
  * @param {typecheck<T>} chk - TypeCheck function for Type T
- * @returns {typecheck<T[]>}
+ * @returns {typecheck<T[]>} return a typechk function for {@link isArrayOf}
  */
 export function chkArrayOf<T>(chk: typecheck<T>): typecheck<T[]> {
   return (obj: unknown): obj is T[] => isArrayOf(obj, chk);
 }
+
 /**
  * Type check for Tuple of [T, U]
  * @param  {unknown} obj
  * @param  {typecheck<T>} t - TypeCheck function for Type T
  * @param  {typecheck<U>} u - TypeCheck function for Type U
- * @returns {obj_is<Tuple<T, U>>}
+ * @returns {boolean} true iff obj is a Tuple of type [T, U]
  */
 export function is2TupleOf<T, U>(
   obj: unknown,
@@ -510,7 +519,7 @@ export function isSetOfString(obj: unknown): obj is Set<string> {
   return isSetOf(obj, isString);
 }
 /**
- * Type check of { [key: string | symbol]: T} types
+ * Type check of \{ [key: string | symbol]: T \} types
  * @param  {unknown} obj
  * @param  {typecheck<T>} chk - a T type-checking function (obj: unknown) => obj is T
  * @returns {obj_is<{any:T}>}
@@ -518,7 +527,7 @@ export function isSetOfString(obj: unknown): obj is Set<string> {
 export function isObjectOf<T>(
   obj: unknown,
   chk: typecheck<T>,
-): obj is NonNullable<{ [key: string]: T }> {
+): obj is NonNullable<{ [key: string | number | symbol]: T }> {
   if (!isObjectNonNull(obj)) {
     return false;
   }
@@ -530,18 +539,19 @@ export function isObjectOf<T>(
   return true;
 }
 /**
- * Type check of { [key: string | symbol]: T} types
+ * Type check of \{ [key: string | symbol]: T \} types
  * @param  {unknown} obj
  * @param  {typecheck<T>} chk - a T type-checking function (obj: unknown) => obj is T
  * @returns {obj_is<{any:T}>}
  */
 export function chkObjectOf<T>(
   chk: typecheck<T>,
-): typecheck<{ [key: string]: T }> {
-  return (obj: unknown): obj is { [key: string]: T } => isObjectOf(obj, chk);
+): typecheck<{ [key: string | number | symbol]: T }> {
+  return (obj: unknown): obj is { [key: string | number | symbol]: T } =>
+    isObjectOf(obj, chk);
 }
 /**
- * Type checking function for {[key: string | symbol]: string} types
+ * Type checking function for \{ [key: string | symbol]: string \} types
  * @param  {unknown} obj
  * @returns {obj_is<{any:string}>}
  */
@@ -674,7 +684,7 @@ export function isSimpleObject(x: unknown): x is SimpleObject {
     isBoolean(x) ||
     isArrayOf(x, isSimpleObject) ||
     (isObjectNonNull(x) &&
-      isArrayOfString(Object.keys(x)) &&
+      isArrayOf(Object.keys(x), chkOneOf(isString, isNumber)) &&
       isObjectOf(x, isSimpleObject))
   );
 }
