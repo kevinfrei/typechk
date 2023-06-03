@@ -29,7 +29,7 @@
     "release": "yarn clean && tsc --project tsconfig.cjs.opt.json && tsc --project tsconfig.esm.opt.json && yarn ftool minify -i -r lib && yarn compat",
     "build": "tsc --project tsconfig.cjs.json && tsc --project tsconfig.esm.json && yarn compat",
     "cleanbuild": "yarn clean && yarn build",
-    "_postinstall": "husky install",
+    "postinstall": "husky install",
     "prepublishOnly": "yarn test && yarn lint && yarn pinst --disable",
     "postpublish": "yarn pinst --enable",
     "prepare": "yarn release",
