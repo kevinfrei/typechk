@@ -1,5 +1,8 @@
 /* eslint-disable no-empty */
 import {
+  chkMapOf,
+  chkObjectOfType,
+  hasField,
   hasFieldType,
   hasStrField,
   is2Tuple,
@@ -130,7 +133,7 @@ const builtInPickleTypes: [typecheck<unknown>, symbol][] = [
   [isBigInt, BigIntTag],
 ];
 
-const picklers = new Map<symbol, ToFlat<unknown>>([
+const thePicklers = new Map<symbol, ToFlat<unknown>>([
   [MapTag, MapPickle as ToFlat<unknown>],
   [SetTag, SetPickle as ToFlat<unknown>],
   [SymbolTag, SymbolPickle as ToFlat<unknown>],
@@ -139,7 +142,7 @@ const picklers = new Map<symbol, ToFlat<unknown>>([
   [BigIntTag, BigIntPickle as ToFlat<unknown>],
 ]);
 
-const unpicklers = new Map<symbol, FromFlat<unknown>>([
+const theUnpicklers = new Map<symbol, FromFlat<unknown>>([
   [MapTag, MapUnpickle],
   [SetTag, SetUnpickle],
   [SymbolTag, SymbolUnpickle],
@@ -148,10 +151,95 @@ const unpicklers = new Map<symbol, FromFlat<unknown>>([
   [BigIntTag, BigIntUnpickle],
 ]);
 
+declare let global: { [key: string | number | symbol]: unknown };
+declare let window: { [key: string | number | symbol]: unknown };
+
+if (hasField(process, 'browser')) {
+  if (!hasField(window, FreikTypeTag)) {
+    window[FreikTypeTag] = { to: thePicklers, from: theUnpicklers };
+  } else if (
+    !hasFieldType(
+      window,
+      FreikTypeTag,
+      chkObjectOfType({
+        to: chkMapOf(isString, isFunction),
+        from: chkMapOf(isString, isFunction),
+      }),
+    )
+  ) {
+    throw Error('Invalid window[FreikTypeTag] object in DOM environment');
+  }
+} else {
+  if (!hasField(global, FreikTypeTag)) {
+    global[FreikTypeTag] = { to: thePicklers, from: theUnpicklers };
+  } else if (
+    !hasFieldType(
+      global,
+      FreikTypeTag,
+      chkObjectOfType({
+        to: chkMapOf(isString, isFunction),
+        from: chkMapOf(isString, isFunction),
+      }),
+    )
+  ) {
+    throw Error('Invalid global[FreikTypeTag] object in NodeJS environment');
+  }
+}
+
+function picklers(): Map<symbol, ToFlat<unknown>> {
+  if (
+    !hasField(process, 'browser') &&
+    hasField(global, FreikTypeTag) &&
+    hasField(global[FreikTypeTag], 'to')
+  ) {
+    return global[FreikTypeTag].to as Map<symbol, ToFlat<unknown>>;
+  } else if (
+    hasField(process, 'browser') &&
+    hasField(window, FreikTypeTag) &&
+    hasField(window[FreikTypeTag], 'to')
+  ) {
+    return window[FreikTypeTag].to as Map<symbol, ToFlat<unknown>>;
+  }
+  throw Error('Well, unpickling crap...');
+}
+
+function getPickleHandler(sym: symbol): ToFlat<unknown> | undefined {
+  return picklers().get(sym);
+}
+
+function setPickleHandler(pickleTag: symbol, toString: ToFlat<unknown>) {
+  picklers().set(pickleTag, toString);
+}
+
+function unpicklers(): Map<symbol, FromFlat<unknown>> {
+  if (
+    !hasField(process, 'browser') &&
+    hasField(global, FreikTypeTag) &&
+    hasField(global[FreikTypeTag], 'from')
+  ) {
+    return global[FreikTypeTag].from as Map<symbol, FromFlat<unknown>>;
+  } else if (
+    hasField(process, 'browser') &&
+    hasField(window, FreikTypeTag) &&
+    hasField(window[FreikTypeTag], 'from')
+  ) {
+    return window[FreikTypeTag].from as Map<symbol, FromFlat<unknown>>;
+  }
+  throw Error('Well, unpickling crap...');
+}
+
+function getUnpickleHandler(sym: symbol): FromFlat<unknown> | undefined {
+  return unpicklers().get(sym);
+}
+
+function setUnpickleHandler(pickleTag: symbol, fromString: FromFlat<unknown>) {
+  unpicklers().set(pickleTag, fromString);
+}
+
 function getPickler(obj: unknown): [symbol, ToFlat<unknown>] | undefined {
   if (hasFieldType(obj, FreikTypeTag, isSymbol)) {
     const s = obj[FreikTypeTag];
-    const p = picklers.get(s);
+    const p = getPickleHandler(s);
     if (p) {
       return [s, p];
     } else if (hasFieldType(obj, 'toJSON', isFunction)) {
@@ -169,7 +257,7 @@ function getPickler(obj: unknown): [symbol, ToFlat<unknown>] | undefined {
   // that we'll handle properly
   for (const [checker, symb] of builtInPickleTypes) {
     if (checker(obj)) {
-      const p = picklers.get(symb);
+      const p = getPickleHandler(symb);
       if (p) {
         return [symb, p];
       }
@@ -178,7 +266,7 @@ function getPickler(obj: unknown): [symbol, ToFlat<unknown>] | undefined {
 }
 
 function getUnpickler(keyName: string): FromFlat<any> | undefined {
-  return unpicklers.get(Symbol.for(keyName));
+  return getUnpickleHandler(Symbol.for(keyName));
 }
 
 function replacer(
@@ -244,7 +332,7 @@ export function RegisterForPickling<T>(
   toString?: ToFlat<T>,
 ): void {
   if (toString) {
-    picklers.set(pickleTag, toString as ToFlat<unknown>);
+    setPickleHandler(pickleTag, toString as ToFlat<unknown>);
   }
-  unpicklers.set(pickleTag, fromString);
+  setUnpickleHandler(pickleTag, fromString);
 }
