@@ -154,36 +154,63 @@ const theUnpicklers = new Map<symbol, FromFlat<unknown>>([
 declare let global: { [key: string | number | symbol]: unknown };
 declare let window: { [key: string | number | symbol]: unknown };
 
-if (hasField(process, 'browser')) {
-  if (!hasField(window, FreikTypeTag)) {
-    window[FreikTypeTag] = { to: thePicklers, from: theUnpicklers };
-  } else if (
-    !hasFieldType(
-      window,
-      FreikTypeTag,
-      chkObjectOfType({
-        to: chkMapOf(isString, isFunction),
-        from: chkMapOf(isString, isFunction),
-      }),
-    )
-  ) {
+// eslint-disable-next-line no-shadow
+export enum RegistrationResult {
+  DomSuccess,
+  DomAlready,
+  DomFail,
+  NodeSuccess,
+  NodeAlready,
+  NodeFail,
+}
+
+export function registerPickling(): RegistrationResult {
+  if (hasField(process, 'browser')) {
+    if (!hasField(window, FreikTypeTag)) {
+      window[FreikTypeTag] = { to: thePicklers, from: theUnpicklers };
+      return RegistrationResult.DomSuccess;
+    } else if (
+      !hasFieldType(
+        window,
+        FreikTypeTag,
+        chkObjectOfType({
+          to: chkMapOf(isString, isFunction),
+          from: chkMapOf(isString, isFunction),
+        }),
+      )
+    ) {
+      return RegistrationResult.DomFail;
+    } else {
+      return RegistrationResult.DomAlready;
+    }
+  } else {
+    if (!hasField(global, FreikTypeTag)) {
+      global[FreikTypeTag] = { to: thePicklers, from: theUnpicklers };
+      return RegistrationResult.NodeSuccess;
+    } else if (
+      !hasFieldType(
+        global,
+        FreikTypeTag,
+        chkObjectOfType({
+          to: chkMapOf(isString, isFunction),
+          from: chkMapOf(isString, isFunction),
+        }),
+      )
+    ) {
+      return RegistrationResult.NodeFail;
+    } else {
+      return RegistrationResult.NodeAlready;
+    }
+  }
+}
+
+switch (registerPickling()) {
+  case RegistrationResult.DomFail:
     throw Error('Invalid window[FreikTypeTag] object in DOM environment');
-  }
-} else {
-  if (!hasField(global, FreikTypeTag)) {
-    global[FreikTypeTag] = { to: thePicklers, from: theUnpicklers };
-  } else if (
-    !hasFieldType(
-      global,
-      FreikTypeTag,
-      chkObjectOfType({
-        to: chkMapOf(isString, isFunction),
-        from: chkMapOf(isString, isFunction),
-      }),
-    )
-  ) {
+  case RegistrationResult.NodeFail:
     throw Error('Invalid global[FreikTypeTag] object in NodeJS environment');
-  }
+  default:
+    break;
 }
 
 function picklers(): Map<symbol, ToFlat<unknown>> {
