@@ -81,13 +81,43 @@ export function chkOneOf<T, U>(
 }
 
 /**
+ * Type check for meeting both of two types
+ *
+ * @param {unknown} obj - The value being checked
+ * @param chk1 - Type Checker #1
+ * @param chk2 - Type Checker #2
+ * @returns true if the object is both type T and type U
+ */
+export function isBothOf<T, U>(
+  obj: unknown,
+  chk1: typecheck<T>,
+  chk2: typecheck<U>,
+): obj is T & U {
+  return chk1(obj) && chk2(obj);
+}
+
+/**
+ * Generate a type check function for two types
+ *
+ * @param chk1 - Type Checker #1
+ * @param chk2 - Type Checker #2
+ * @returns A type check function for {@link isOneOf}
+ */
+export function chkBothOf<T, U>(
+  chk1: typecheck<T>,
+  chk2: typecheck<U>,
+): typecheck<T & U> {
+  return (obj: unknown): obj is T & U => isBothOf(obj, chk1, chk2);
+}
+
+/**
  * Type check for a non-null object
  *
  * @param {unknown} obj - The value being checked
  * @returns true if the value is an object, and is not null
  */
 export function isObjectNonNull(obj: unknown): obj is NonNullable<object> {
-  return typeof obj === 'object' && !isEmpty(obj);
+  return isBothOf(obj, isObject, isNonNullable);
 }
 
 /**
