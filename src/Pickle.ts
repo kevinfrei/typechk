@@ -2,6 +2,7 @@
 import {
   chkMapOf,
   chkObjectOfType,
+  chkOneOf,
   hasField,
   hasFieldType,
   hasStrField,
@@ -163,19 +164,22 @@ export enum RegistrationResult {
   NodeAlready,
   NodeFail,
 }
-
+const pickleKey = FreikTypeTag;
 export function registerPickling(): RegistrationResult {
   if (hasField(process, 'browser')) {
-    if (!hasField(window, FreikTypeTag)) {
-      window[FreikTypeTag] = { to: thePicklers, from: theUnpicklers };
+    if (!hasField(window, pickleKey)) {
+      (window as any as { [key: symbol]: unknown })[pickleKey] = {
+        to: thePicklers,
+        from: theUnpicklers,
+      };
       return RegistrationResult.DomSuccess;
     } else if (
       !hasFieldType(
         window,
-        FreikTypeTag,
+        pickleKey,
         chkObjectOfType({
-          to: chkMapOf(isString, isFunction),
-          from: chkMapOf(isString, isFunction),
+          to: chkMapOf(chkOneOf(isSymbol, isString), isFunction),
+          from: chkMapOf(chkOneOf(isSymbol, isString), isFunction),
         }),
       )
     ) {
@@ -184,16 +188,19 @@ export function registerPickling(): RegistrationResult {
       return RegistrationResult.DomAlready;
     }
   } else {
-    if (!hasField(global, FreikTypeTag)) {
-      global[FreikTypeTag] = { to: thePicklers, from: theUnpicklers };
+    if (!hasField(global, pickleKey)) {
+      (global as any as { [key: symbol]: unknown })[pickleKey] = {
+        to: thePicklers,
+        from: theUnpicklers,
+      };
       return RegistrationResult.NodeSuccess;
     } else if (
       !hasFieldType(
         global,
-        FreikTypeTag,
+        pickleKey,
         chkObjectOfType({
-          to: chkMapOf(isString, isFunction),
-          from: chkMapOf(isString, isFunction),
+          to: chkMapOf(chkOneOf(isSymbol, isString), isFunction),
+          from: chkMapOf(chkOneOf(isSymbol, isString), isFunction),
         }),
       )
     ) {
@@ -206,9 +213,13 @@ export function registerPickling(): RegistrationResult {
 
 switch (registerPickling()) {
   case RegistrationResult.DomFail:
-    throw Error('Invalid window[FreikTypeTag] object in DOM environment');
+    throw Error(
+      `Invalid window[${String(pickleKey)}] object in DOM environment`,
+    );
   case RegistrationResult.NodeFail:
-    throw Error('Invalid global[FreikTypeTag] object in NodeJS environment');
+    throw Error(
+      `Invalid global[${String(pickleKey)}] object in NodeJS environment`,
+    );
   default:
     break;
 }
@@ -216,16 +227,16 @@ switch (registerPickling()) {
 function picklers(): Map<symbol, ToFlat<unknown>> {
   if (
     !hasField(process, 'browser') &&
-    hasField(global, FreikTypeTag) &&
-    hasField(global[FreikTypeTag], 'to')
+    hasField(global, pickleKey) &&
+    hasField(global[pickleKey], 'to')
   ) {
-    return global[FreikTypeTag].to as Map<symbol, ToFlat<unknown>>;
+    return global[pickleKey].to as Map<symbol, ToFlat<unknown>>;
   } else if (
     hasField(process, 'browser') &&
-    hasField(window, FreikTypeTag) &&
-    hasField(window[FreikTypeTag], 'to')
+    hasField(window, pickleKey) &&
+    hasField(window[pickleKey], 'to')
   ) {
-    return window[FreikTypeTag].to as Map<symbol, ToFlat<unknown>>;
+    return window[pickleKey].to as Map<symbol, ToFlat<unknown>>;
   }
   throw Error('Well, unpickling crap...');
 }
@@ -241,16 +252,16 @@ function setPickleHandler(pickleTag: symbol, toString: ToFlat<unknown>) {
 function unpicklers(): Map<symbol, FromFlat<unknown>> {
   if (
     !hasField(process, 'browser') &&
-    hasField(global, FreikTypeTag) &&
-    hasField(global[FreikTypeTag], 'from')
+    hasField(global, pickleKey) &&
+    hasField(global[pickleKey], 'from')
   ) {
-    return global[FreikTypeTag].from as Map<symbol, FromFlat<unknown>>;
+    return global[pickleKey].from as Map<symbol, FromFlat<unknown>>;
   } else if (
     hasField(process, 'browser') &&
-    hasField(window, FreikTypeTag) &&
-    hasField(window[FreikTypeTag], 'from')
+    hasField(window, pickleKey) &&
+    hasField(window[pickleKey], 'from')
   ) {
-    return window[FreikTypeTag].from as Map<symbol, FromFlat<unknown>>;
+    return window[pickleKey].from as Map<symbol, FromFlat<unknown>>;
   }
   throw Error('Well, unpickling crap...');
 }

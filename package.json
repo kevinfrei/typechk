@@ -1,6 +1,6 @@
 {
   "name": "@freik/typechk",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Core set of TS/JS type checking helpers",
   "author": "Kevin Frei (kevinfrei@hotmail.com)",
   "license": "Unlicense",
