@@ -7,6 +7,7 @@ import {
   chk2TupleOf,
   chk3TupleOf,
   chkArrayOf,
+  chkBothOf,
   chkCustomType,
   chkField,
   chkFieldType,
@@ -20,6 +21,8 @@ import {
   is3TupleOf,
   isArray,
   isArrayOf,
+  isArrayOfString,
+  isBothOf,
   isCustomType,
   isDate,
   isDefined,
@@ -154,7 +157,7 @@ test('The simple is/as tests', () => {
   val.tester = 'foo';
   expect(isFunction(val)).toBeTruthy();
 });
-test('as/toArrayOfString tests', () => {
+test('is/as/toArrayOfString tests', () => {
   expect(asArrayOfString([0, 'a'])).toEqual(['a']);
   expect(asArrayOfString({ a: 1 })).toEqual([]);
   expect(asArrayOfString(() => [], ['bcd'])).toEqual(['bcd']);
@@ -170,6 +173,8 @@ test('as/toArrayOfString tests', () => {
   expect(toArrayOfString([{}, 'A'], 'B')).toEqual(['B', 'A']);
   expect(toArrayOfString([{}, 'A'], ['hola'])).toEqual(['hola']);
   expect(toArrayOfString(['B', 'A'], ['hola'])).toEqual(['B', 'A']);
+  expect(isArrayOfString(['a', 'b'])).toBeTruthy();
+  expect(isArrayOfString(['a', 1])).toBeFalsy();
 });
 test('Miscellaneous type checks', async () => {
   expect(isObjectOfString({ a: 'b' })).toBeTruthy();
@@ -243,7 +248,7 @@ test('Miscellaneous type checks', async () => {
   expect(chkCustomType<MyGoofyType>(MyGoofyTypeTag)(myGoofyObj)).toBeTruthy();
 });
 
-test('is/asSimpleObject tests', () => {
+test('is/asSimpleObject, chk/isBothOf tests', () => {
   const arr = [null, 'a', 12, true];
   const arrr = [...arr, () => {}];
   const sarr = asSimpleObject(arr);
@@ -261,4 +266,16 @@ test('is/asSimpleObject tests', () => {
   expect(sobj).toStrictEqual(obj);
   expect(asSimpleObject(() => {})).toBeNull();
   expect(isSimpleObject(() => {})).toBeFalsy();
+  expect(
+    isBothOf(['a', 'b'], isArrayOfString, chk2TupleOf(isString, isString)),
+  ).toBeTruthy();
+  expect(
+    isArrayOf(
+      [
+        ['a', 'b'],
+        ['c', 'd'],
+      ],
+      chkBothOf(isArrayOfString, chk2TupleOf(isString, isString)),
+    ),
+  ).toBeTruthy();
 });
