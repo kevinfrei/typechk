@@ -774,12 +774,11 @@ export type RequiredKeysOf<BaseType extends object> = Exclude<
   undefined
 >;
 
-export function isObjectOfType<T extends NonNullable<object>>(
+function isObjOfHelper<T extends NonNullable<object>>(
+  exact: boolean,
   obj: unknown,
   requiredFields: Record<RequiredKeysOf<T>, boolcheck>,
-  optionalFields:
-    | Record<OptionalKeysOf<T>, boolcheck>
-    | Record<string, never> = {},
+  optionalFields: Record<OptionalKeysOf<T>, boolcheck> | Record<string, never>,
 ): obj is T {
   if (!isObjectNonNull(obj)) {
     return false;
@@ -791,6 +790,7 @@ export function isObjectOfType<T extends NonNullable<object>>(
     /* istanbul ignore if */
     if (!hasField(obj, fieldName)) continue;
     const theVal = obj[fieldName];
+    // TODO: Not sure if this is a good idea or not. Deleting out nulls?
     if (isUndefined(theVal) || obj[fieldName] === null) {
       delete obj[fieldName];
       len--;
@@ -803,12 +803,9 @@ export function isObjectOfType<T extends NonNullable<object>>(
         return false;
       }
       len--;
-    } else {
+    } else if (hasFieldType(requiredFields, fieldName, isFunction)) {
       const fieldTypeChecker =
         requiredFields[fieldName as keyof typeof requiredFields];
-      if (!fieldTypeChecker) {
-        return false;
-      }
       if (!fieldTypeChecker(theVal)) {
         return false;
       }
@@ -816,7 +813,29 @@ export function isObjectOfType<T extends NonNullable<object>>(
       len--;
     }
   }
-  return required === 0 && len === 0;
+  // If len is 0, then we validated all the fields, so it's an exact type
+  // If len isn't 0, then there were some extra fields we didn't validate
+  return required === 0 && (len === 0 || !exact);
+}
+
+export function isObjectOfExactType<T extends NonNullable<object>>(
+  obj: unknown,
+  requiredFields: Record<RequiredKeysOf<T>, boolcheck>,
+  optionalFields:
+    | Record<OptionalKeysOf<T>, boolcheck>
+    | Record<string, never> = {},
+): obj is T {
+  return isObjOfHelper<T>(true, obj, requiredFields, optionalFields);
+}
+
+export function isObjectOfType<T extends NonNullable<object>>(
+  obj: unknown,
+  requiredFields: Record<RequiredKeysOf<T>, boolcheck>,
+  optionalFields:
+    | Record<OptionalKeysOf<T>, boolcheck>
+    | Record<string, never> = {},
+): obj is T {
+  return isObjOfHelper<T>(false, obj, requiredFields, optionalFields);
 }
 
 export function chkObjectOfType<T extends object>(
@@ -825,7 +844,18 @@ export function chkObjectOfType<T extends object>(
     | Record<OptionalKeysOf<T>, boolcheck>
     | Record<string, never> = {},
 ): typecheck<T> {
-  return (obj): obj is T => isObjectOfType(obj, requiredFields, optionalFields);
+  return (obj): obj is T =>
+    isObjOfHelper(false, obj, requiredFields, optionalFields);
+}
+
+export function chkObjectOfExactType<T extends object>(
+  requiredFields: Record<RequiredKeysOf<T>, boolcheck>,
+  optionalFields:
+    | Record<OptionalKeysOf<T>, boolcheck>
+    | Record<string, never> = {},
+): typecheck<T> {
+  return (obj): obj is T =>
+    isObjOfHelper(true, obj, requiredFields, optionalFields);
 }
 
 export function isPartialOf<T extends object>(

@@ -13,6 +13,7 @@ import {
   chkFieldType,
   chkMapOf,
   chkObjectOf,
+  chkObjectOfExactType,
   chkObjectOfType,
   chkPartialOf,
   chkSetOf,
@@ -37,6 +38,7 @@ import {
   isNumberOrString,
   isObject,
   isObjectOf,
+  isObjectOfExactType,
   isObjectOfString,
   isObjectOfType,
   isPartialOf,
@@ -126,7 +128,16 @@ test('isObjectOf tests', () => {
     isObjectOfType<T>({ a: 2, b: () => '', d: null }, required, optional),
   ).toBeTruthy();
   expect(
+    isObjectOfExactType<T>({ a: 2, b: () => '', d: '' }, required, optional),
+  ).toBeFalsy();
+  expect(
     isObjectOfType<T>({ a: 2, b: () => '', d: '' }, required, optional),
+  ).toBeTruthy();
+  expect(
+    isArrayOf(
+      [{ a: 2, b: () => '', d: '' }],
+      chkObjectOfExactType(required, optional),
+    ),
   ).toBeFalsy();
 });
 test('The simple is/as tests', () => {
