@@ -1,5 +1,3 @@
 # typechk
-My type-safety focused TS + JS stuff all in a single, small modules
 
-## TODO
-Put docs in here! It's done, so I ought to document it...
+This has been moved to my [mono(ish) repo](https://github.com/kevinfrei/packages.git).
